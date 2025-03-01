@@ -1,0 +1,16 @@
+#ifndef _STDLIB_H
+#define _STDLIB_H 1
+
+#include <sys/cdefs.h>
+
+#ifdef _cplusplus
+extern "C" {
+#endif 
+
+__attribute__((__noreturn__))
+void abort(void);
+
+#ifdef _cplusplus
+}
+#endif 
+#endif // !_STDLIB_H

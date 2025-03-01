@@ -1,0 +1,5 @@
+patience_os.iso
+build/
+i686-elf-tools/
+compile_commands.json
+.cache/
