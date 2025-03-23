@@ -1,3 +1,4 @@
+#include "libc/ports.h"
 #include <drivers/vga.h>
 #include <kernel/tty.h>
 #include <libc/string.h>
@@ -19,6 +20,7 @@ void terminal_init(void)
       terminal.buffer[index] = vga_entry(' ', terminal.colour);
     }
   }
+  terminal_update_cursor(terminal.row, terminal.column);
 }
 
 void terminal_setcolour(uint8_t colour)
@@ -47,6 +49,8 @@ void terminal_scroll(void) {
     size_t index = (VGA_HEIGHT - 1) * VGA_WIDTH + x;
     terminal.buffer[index] = vga_entry(' ', terminal.colour);
   }
+
+  terminal_update_cursor(terminal.row, terminal.column);
 }
 
 void terminal_putchar(char c) {
@@ -57,6 +61,36 @@ void terminal_putchar(char c) {
     if (++terminal.row == VGA_HEIGHT) {
       terminal_scroll();
       terminal.row = VGA_HEIGHT - 1;
+    }
+    terminal_update_cursor(terminal.row, terminal.column);
+    return;
+  }
+
+  if (uc == '\b') {
+    if (terminal.column > 0) {
+      if (!(terminal.row == terminal.protected_row && terminal.column <= terminal.protected_column)) {
+        terminal.column--;
+        terminal_putentryat(' ', terminal.colour, terminal.column, terminal.row);
+        terminal_update_cursor(terminal.row, terminal.column);
+      }
+    } else if (terminal.row > terminal.protected_row) {
+      terminal.row--;
+      terminal.column = VGA_WIDTH - 1;
+
+      do {
+        terminal.column--;
+        uint16_t entry = terminal.buffer[terminal.row * VGA_WIDTH + terminal.column];
+        char ch = (char)(entry & 0xFF);
+        if (ch != ' ') {
+          break;
+        }
+      } while (terminal.column > 0);
+
+      if (!(terminal.row < terminal.protected_row ||
+      (terminal.row == terminal.protected_row && terminal.column < terminal.protected_column))) {
+        terminal_putentryat(' ', terminal.colour, terminal.column, terminal.row);
+        terminal_update_cursor(terminal.row, terminal.column);
+      }
     }
     return;
   }
@@ -70,6 +104,8 @@ void terminal_putchar(char c) {
       terminal.row = VGA_HEIGHT - 1;
     }
   }
+  
+  terminal_update_cursor(terminal.row, terminal.column);
 }
 
 void terminal_print(const char *data, size_t size)
@@ -83,3 +119,15 @@ void terminal_printstr(const char *data)
   terminal_print(data, strlen(data));
 }
 
+void terminal_update_cursor(int row, int col) {
+  uint16_t pos = row * VGA_WIDTH + col;
+  outPortB(0x3D4, 0x0F); // cursor location low byte
+  outPortB(0x3D5, (uint8_t)(pos & 0xFF));
+  outPortB(0x3D4, 0x0E); // cursor location high byte
+  outPortB(0x3D5, (uint8_t)((pos >> 8) & 0xFF));
+}
+
+void terminal_lock_position() {
+  terminal.protected_row = terminal.row;
+  terminal.protected_column = terminal.column;
+}

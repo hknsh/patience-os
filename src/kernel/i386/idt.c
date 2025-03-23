@@ -2,6 +2,8 @@
 #include <libc/stdio.h>
 #include <libc/string.h>
 #include <libc/ports.h>
+#include "drivers/vga.h"
+#include "kernel/tty.h"
 #include "stdint.h"
 
 struct idt_entry_struct idt_entries[256];
@@ -11,7 +13,7 @@ extern void idt_flush(uint32_t);
 
 void idt_init() {
   idt_ptr.limit = sizeof(struct idt_entry_struct) * 256 - 1;
-  idt_ptr.base = (uint32_t)&idt_entries;
+  idt_ptr.base = (uint32_t) &idt_entries;
 
   memset(&idt_entries, 0, sizeof(struct idt_entry_struct) * 256);
 
@@ -67,21 +69,21 @@ void idt_init() {
   idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8E);
 
   idt_set_gate(32, (uint32_t)irq0, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq1, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq2, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq3, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq4, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq5, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq6, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq7, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq8, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq9, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq10, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq11, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq12, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq13, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq14, 0x08, 0x8E);
-  idt_set_gate(32, (uint32_t)irq15, 0x08, 0x8E);
+  idt_set_gate(33, (uint32_t)irq1, 0x08, 0x8E);
+  idt_set_gate(34, (uint32_t)irq2, 0x08, 0x8E);
+  idt_set_gate(35, (uint32_t)irq3, 0x08, 0x8E);
+  idt_set_gate(36, (uint32_t)irq4, 0x08, 0x8E);
+  idt_set_gate(37, (uint32_t)irq5, 0x08, 0x8E);
+  idt_set_gate(38, (uint32_t)irq6, 0x08, 0x8E);
+  idt_set_gate(39, (uint32_t)irq7, 0x08, 0x8E);
+  idt_set_gate(40, (uint32_t)irq8, 0x08, 0x8E);
+  idt_set_gate(41, (uint32_t)irq9, 0x08, 0x8E);
+  idt_set_gate(42, (uint32_t)irq10, 0x08, 0x8E);
+  idt_set_gate(43, (uint32_t)irq11, 0x08, 0x8E);
+  idt_set_gate(44, (uint32_t)irq12, 0x08, 0x8E);
+  idt_set_gate(45, (uint32_t)irq13, 0x08, 0x8E);
+  idt_set_gate(46, (uint32_t)irq14, 0x08, 0x8E);
+  idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
 
   idt_set_gate(128, (uint32_t)isr128, 0x08, 0x8E); // System calls
   idt_set_gate(177, (uint32_t)isr177, 0x08, 0x8E); // System calls
@@ -133,9 +135,10 @@ const char* exception_messages[] = {
 
 void isr_handler(struct InterruptRegisters* regs) {
   if (regs->int_no < 32) {
-    printf(exception_messages[regs->int_no]);
-    printf("\n");
+    terminal_setcolour(vga_entry_colour(VGA_COLOUR_RED, VGA_COLOUR_LIGHT_GREY));
+    printf("%s\n", exception_messages[regs->int_no]);
     printf("panic! kernel is sad. halted.\n");
+    terminal_setcolour(vga_entry_colour(VGA_COLOUR_LIGHT_GREY, VGA_COLOUR_BLACK));
     for(;;);
   }
 }
@@ -156,14 +159,11 @@ void irq_uninstall_handler(int irq) {
 void irq_handler(struct InterruptRegisters *regs) {
   void (*handler)(struct InterruptRegisters *regs);
   handler = irq_routines[regs->int_no - 32];
-
   if (handler) {
     handler(regs);
   }
-
   if (regs->int_no >= 40) {
     outPortB(0xA0, 0x20);
   }
-
   outPortB(0x20, 0x20);
 }
