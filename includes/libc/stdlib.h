@@ -3,12 +3,15 @@
 
 #include <sys/cdefs.h>
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif 
 
 __attribute__((__noreturn__))
 void abort(void);
+
+int atoi(const char*);
+char* itoa(int, char*, int);
 
 #ifdef _cplusplus
 }

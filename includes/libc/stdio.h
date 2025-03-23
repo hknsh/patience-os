@@ -5,13 +5,15 @@
 
 #define EOF (-1)
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif 
 
 int printf(const char* __restrict, ...);
 int putchar(int);
 int puts(const char*);
+char getchar(void);
+char* gets(char*);
 
 #ifdef _cplusplus
 }

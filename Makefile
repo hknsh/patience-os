@@ -1,7 +1,8 @@
 TOOLCHAIN_PATH := ./i686-elf-tools/bin
 CC := $(TOOLCHAIN_PATH)/i686-elf-gcc
 LD := $(TOOLCHAIN_PATH)/i686-elf-gcc
-AS := $(TOOLCHAIN_PATH)/i686-elf-as
+AS := nasm
+
 # Directories
 SRC_DIR := src
 INCLUDE_DIR := includes
@@ -9,34 +10,43 @@ BUILD_DIR := build
 OBJ_DIR := $(BUILD_DIR)/obj
 ISO_DIR := $(BUILD_DIR)/boot
 GRUB_DIR := $(ISO_DIR)/grub
+
 # Flags
 CFLAGS := -std=gnu99 -ffreestanding -O2 -Wall -Wextra \
 					-I$(INCLUDE_DIR)
 LDFLAGS := -ffreestanding -O2 -nostdlib -lgcc
+
 # Output
 KERNEL_BIN := $(BUILD_DIR)/patience_os.bin
 ISO_FILE := $(BUILD_DIR)/patience_os.iso
+
 # Sources
 C_SOURCES := $(shell find $(SRC_DIR) -name "*.c")
 ASM_SOURCES := $(shell find $(SRC_DIR) -name "*.s")
+
 # Objects
 C_OBJECTS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(C_SOURCES))
 ASM_OBJECTS := $(patsubst $(SRC_DIR)/%.s, $(OBJ_DIR)/%.o, $(ASM_SOURCES))
 OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
 OBJ_DIRS := $(sort $(dir $(OBJECTS)))
+
 # Default target
 all: $(ISO_FILE)
+
 # Create necessary directiories
 $(OBJ_DIRS):
 	@mkdir -p $@
+
 # Compile C sources
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIRS)
 	@echo "Compiling C source $<"
 	@$(CC) $(CFLAGS) -c $< -o $@
+
 # Assemble assembly sources
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.s | $(OBJ_DIRS)
-	@echo "Assembling ASM source $<"
-	@$(AS) $< -o $@
+	@echo "Assembling ASM source with NASM $<"
+	@$(AS) -f elf32 $< -o $@
+
 # Link the kernel
 $(KERNEL_BIN): $(OBJECTS)
 	@echo "Linking the kernel"
@@ -49,6 +59,7 @@ $(KERNEL_BIN): $(OBJECTS)
 		echo "Error: File is not multiboot compliant."; \
 		exit 1; \
 	fi
+
 # Create ISO
 $(ISO_FILE): $(KERNEL_BIN)
 	@echo "Creating ISO Image..."
@@ -57,16 +68,20 @@ $(ISO_FILE): $(KERNEL_BIN)
 	@cp grub.cfg $(GRUB_DIR)/grub.cfg
 	@grub2-mkrescue -o $@ $(BUILD_DIR)
 	@echo "Build successful: $(ISO_FILE)"
+
 # Run in QEMU
 run: $(ISO_FILE)
 	qemu-system-i386 -cdrom $(ISO_FILE)
+
 # Run in QEMU with debug options
 debug: $(ISO_FILE)
 	qemu-system-i386 -cdrom $(ISO_FILE) -serial stdio -display curses
+
 # Clean up
 clean:
 	@echo "Cleaning build files..."
 	@rm -rf $(BUILD_DIR)
+
 # Generate compile_commands.json
 compile_commands:
 	@echo "Generating compile_commands.json..."
@@ -85,6 +100,7 @@ compile_commands:
 	done
 	@echo "]" >> compile_commands.json
 	@echo "compile_commands.json generated."
+
 help:
 	@echo "PatienceOS Makefile"
 	@echo "Available targets:"

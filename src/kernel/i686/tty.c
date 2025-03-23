@@ -82,3 +82,4 @@ void terminal_printstr(const char *data)
 {
   terminal_print(data, strlen(data));
 }
+
