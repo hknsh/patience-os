@@ -2,9 +2,9 @@
 #include <libc/stdio.h>
 #include <libc/string.h>
 #include <libc/ports.h>
-#include "drivers/vga.h"
-#include "kernel/tty.h"
-#include "stdint.h"
+#include <drivers/vga.h>
+#include <kernel/tty.h>
+#include <stdint.h>
 
 struct idt_entry_struct idt_entries[256];
 struct idt_ptr_struct idt_ptr;

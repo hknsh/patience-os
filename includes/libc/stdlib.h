@@ -7,6 +7,8 @@
 extern "C" {
 #endif 
 
+#define CEIL_DIVISION(a,b) (((a + b) - 1) / b)
+
 __attribute__((__noreturn__))
 void abort(void);
 

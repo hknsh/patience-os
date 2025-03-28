@@ -37,12 +37,12 @@ void shell_handle_char(char c) {
 
 void shell_process_command(const char* cmd) {
   if (strcmp(cmd, "help") == 0) {
-    printf("\navailable commands: help, clear, uname\n\n");
+    printf("available commands: help, clear, uname\n");
   } else if (strcmp(cmd, "clear") == 0) {
     terminal_init();
   } else if (strcmp(cmd, "uname") == 0) {
-    printf("\npatienceOS/i386 (alpha) (kernel)\n\n");
+    printf("patienceOS/i386 (alpha) (kernel)\n");
   } else if (strlen(cmd) == 0) {} else {
-    printf("\nunknown command: %s\n\n", cmd);
+    printf("unknown command: %s\n", cmd);
   }
 }

@@ -1,34 +1,66 @@
 ; Constants for the multiboot header
-%define ALIGN     1 << 0
-%define MEMINFO   1 << 1
-%define FLAGS     (ALIGN | MEMINFO)
-%define MAGIC     0x1BADB002
-%define CHECKSUM  -(MAGIC + FLAGS)
+%define MBOOT_ALIGN     1 << 0
+%define MBOOT_MEMINFO   1 << 1
+%define MBOOT_USE_GFX   0
+%define MBOOT_FLAGS     (MBOOT_ALIGN | MBOOT_MEMINFO | MBOOT_USE_GFX)
+%define MBOOT_MAGIC     0x1BADB002
+%define MBOOT_CHECKSUM  -(MBOOT_MAGIC + MBOOT_FLAGS)
 
 section .multiboot
 align 4
-    dd MAGIC
-    dd FLAGS
-    dd CHECKSUM
+    dd MBOOT_MAGIC
+    dd MBOOT_FLAGS
+    dd MBOOT_CHECKSUM
+    dd 0, 0, 0, 0, 0
+    dd 0
+    dd 800
+    dd 600
+    dd 32
 
 section .bss
 align 16
 stack_bottom:
-    resb 16384        ; 16 KiB
+    resb 16384 * 8      ; 128 KiB
 stack_top:
 
-section .text
+section .boot
+
 global _start
-extern kernel_main
 _start:
-    ; Set up the stack
-    mov esp, stack_top
+  mov ecx, (initial_page_dir - 0xC0000000)
+  mov cr3, ecx
+  
+  mov ecx, cr4
+  or ecx, 0x10
+  mov cr4, ecx
 
-    ; Call kernel_main (will be linked from C code)
-    call kernel_main
+  mov ecx, cr0
+  or ecx, 0x80000000
+  mov cr0, ecx
 
-    ; Halt the CPU forever
-    cli
-.hang:
-    hlt
-    jmp .hang
+  jmp higher_half
+
+section .text
+higher_half:
+  mov esp, stack_top
+  push ebx
+  push eax
+  xor ebp, ebp
+  extern kernel_main
+  call kernel_main
+halt:
+  hlt
+  JMP halt
+
+section .data
+align 4096
+global initial_page_dir
+initial_page_dir:
+  dd 10000011b
+  times 768-1 dd 0
+
+  dd (0 << 22) | 10000011b
+  dd (1 << 22) | 10000011b
+  dd (2 << 22) | 10000011b
+  dd (3 << 22) | 10000011b
+  times 256-4 dd 0
