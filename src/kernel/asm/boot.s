@@ -1,7 +1,7 @@
 ; Constants for the multiboot header
 %define MBOOT_ALIGN     1 << 0
 %define MBOOT_MEMINFO   1 << 1
-%define MBOOT_USE_GFX   0
+%define MBOOT_USE_GFX   0 ; Enable when start graphical
 %define MBOOT_FLAGS     (MBOOT_ALIGN | MBOOT_MEMINFO | MBOOT_USE_GFX)
 %define MBOOT_MAGIC     0x1BADB002
 %define MBOOT_CHECKSUM  -(MBOOT_MAGIC + MBOOT_FLAGS)
@@ -56,11 +56,11 @@ section .data
 align 4096
 global initial_page_dir
 initial_page_dir:
-  dd 10000011b
+  dd (0 << 22) | 0x183
   times 768-1 dd 0
 
-  dd (0 << 22) | 10000011b
-  dd (1 << 22) | 10000011b
-  dd (2 << 22) | 10000011b
-  dd (3 << 22) | 10000011b
+  dd (0 << 22) | 0x183
+  dd (1 << 22) | 0x183
+  dd (2 << 22) | 0x183
+  dd (3 << 22) | 0x183
   times 256-4 dd 0

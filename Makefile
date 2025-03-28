@@ -75,7 +75,7 @@ run: $(ISO_FILE)
 
 # Run in QEMU with debug options
 debug: $(ISO_FILE)
-	qemu-system-i386 -cdrom $(ISO_FILE) -serial stdio -display curses
+	qemu-system-i386 -cdrom $(ISO_FILE) -no-reboot -d int,cpu_reset
 
 # Clean up
 clean:

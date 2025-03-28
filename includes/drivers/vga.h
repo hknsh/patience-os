@@ -26,7 +26,7 @@ enum vga_colour
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
-static uint16_t* const VIDEO_MEMORY = (uint16_t*) 0xB8000;
+static uint16_t* const VIDEO_MEMORY = (uint16_t*) 0xC00B8000;
 
 uint8_t vga_entry_colour(enum vga_colour fg, enum vga_colour bg);
 uint16_t vga_entry(unsigned char uc, uint8_t colour);

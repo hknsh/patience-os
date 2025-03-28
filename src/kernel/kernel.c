@@ -7,6 +7,7 @@
 #include <kernel/gdt.h>
 #include <kernel/multiboot.h>
 #include <kernel/memory.h>
+#include <libc/stdlib.h>
 #include <libc/stdio.h>
 #include <libc/stdio.h>
 #include <drivers/vga.h>
@@ -38,12 +39,13 @@ void kernel_main(uint32_t magic, struct multiboot_info* boot_info)
   printf("kernel: i386/timer initialized.\n");
   init_keyboard_driver();
   printf("driver: drivers/keyboard initialized.\n");
-  
-  // uint32_t mod1 = *(uint32_t*)(boot_info->mods_attr + 4);
-  // uint32_t physicalAllocStart = (mod1 + 0xFFF) & ~0xFFF;
-  // memory_init(boot_info->mem_upper * 1024, physicalAllocStart);
 
-  // printf("kernel: i386/memory initialized.\n");
+  uint32_t mod1 = *(uint32_t*)(boot_info->mods_addr + 4);
+  uint32_t physicalAllocStart = (mod1 + 0xFFF) & ~0xFFF;
+  memory_init(boot_info->mem_upper * 1024, physicalAllocStart);
+  malloc_init(0x1000);
+  printf("kernel: i386/memory initialized.\n");
+
   printf("kernel: initializing sh.\n");
   terminal_lock_position();
   terminal_setcolour(vga_entry_colour(VGA_COLOUR_LIGHT_GREY, VGA_COLOUR_BLACK));

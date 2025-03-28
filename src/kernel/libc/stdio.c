@@ -54,6 +54,14 @@ int printf(const char* restrict format, ...) {
         written += len;
         break;
       }
+      case 'u' : {
+        unsigned int val = va_arg(args, unsigned int);
+        utoa(val, buffer);
+        size_t len = strlen(buffer);
+        if (!print(buffer, len)) return -1;
+        written += len;
+        break;
+      }      
       case '%': {
         if (!print("%", 1)) return -1;
         written++;
